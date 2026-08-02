@@ -1,22 +1,158 @@
-Loan Application Management SystemA comprehensive loan application management system built with Spring Boot 3, featuring role-based access control, JWT authentication, and a modern dark-themed UI.🚀 FeaturesUser Authentication & AuthorizationJWT-based authenticationRole-based access control (Customer, Officer, Manager, Admin)Secure password encryption with BCryptLoan Application WorkflowCustomer loan application submissionOfficer verification and forwardingManager final approval/rejectionReal-time status trackingDashboardsCustomer Dashboard: Apply for loans, track application status, manage repaymentsOfficer Dashboard: Verify pending applicationsManager Dashboard: Approve/reject verified applicationsAdmin Dashboard: System statistics and user managementModern UIDark-themed responsive designTailwind CSS stylingReal-time data updatesMobile-friendly interface🛠️ Technology StackBackendJava 21Spring Boot 3.2.5Spring SecuritySpring Data JPAMySQL DatabaseJWT (JJWT library)LombokFrontendThymeleaf TemplatesTailwind CSSBootstrap 5Vanilla JavaScript📋 PrerequisitesJava Development Kit (JDK): 21 or higherMaven: 3.6+MySQL Server: 8.0+IDE: IntelliJ IDEA, Eclipse, or VS Code🗄️ Database Setup1. Create MySQL DatabaseSQLCREATE DATABASE loanapp_db;
-2. Update Database CredentialsEdit src/main/resources/application.properties:Propertiesspring.datasource.url=jdbc:mysql://localhost:3306/loanapp_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-spring.datasource.username=root
+# Loan Application Management System
+
+A comprehensive loan application management system built with **Spring Boot 3**, featuring role-based access control, JWT authentication, and a modern dark-themed UI.
+
+---
+
+## 🚀 Features
+
+### **User Authentication & Authorization**
+- JWT-based authentication
+- Role-based access control (Customer, Officer, Manager, Admin)
+- Secure password encryption with BCrypt
+
+### **Loan Application Workflow**
+- Customer loan application submission
+- Officer verification and forwarding
+- Manager final approval/rejection
+- Real-time status tracking
+
+### **Dashboards**
+- **Customer Dashboard:** Apply for loans, track application status, manage repayments
+- **Officer Dashboard:** Verify pending applications
+- **Manager Dashboard:** Approve/reject verified applications
+- **Admin Dashboard:** System statistics and user management
+
+### **Modern UI**
+- Dark-themed responsive design
+- Tailwind CSS styling
+- Real-time data updates
+- Mobile-friendly interface
+
+---
+
+## 🛠️ Technology Stack
+
+### **Backend**
+- Java 21
+- Spring Boot 3.2.5
+- Spring Security
+- Spring Data JPA
+- MySQL Database
+- JWT (JJWT library)
+- Lombok
+
+### **Frontend**
+- Thymeleaf Templates
+- Tailwind CSS
+- Bootstrap 5
+- Vanilla JavaScript
+
+---
+
+## 📋 Prerequisites
+
+- **Java Development Kit (JDK):** 21 or higher
+- **Maven:** 3.6+
+- **MySQL Server:** 8.0+
+- **IDE:** IntelliJ IDEA, Eclipse, or VS Code
+
+---
+
+## 🗄️ Database Setup
+
+### 1. Create MySQL Database
+```sql
+CREATE DATABASE loanapp_db;
+
+2. Update Database Credentials
+Edit src/main/resources/application.properties:
+
+spring.datasource.url=jdbc:mysql://localhost:3306/db_name?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+spring.datasource.username=username
 spring.datasource.password=your_password
-Replace your_password with your MySQL root password.⚙️ Installation & Setup1. Clone the RepositoryBashgit clone <repository-url>
+
+⚙️ Installation & Setup
+1. Clone the Repository
+Bash
+git clone <repository-url>
 cd loanapp
-2. Build the ProjectUsing Maven wrapper:Bash# On Windows
+2. Build the Project
+Using Maven wrapper:
+
+Bash
+# On Windows
 mvnw.cmd clean install
 
 # On Linux/Mac
 ./mvnw clean install
-Or using standard Maven:Bashmvn clean install
-3. Run the ApplicationUsing Maven wrapper:Bash# On Windows
+Or using standard Maven:
+
+Bash
+mvn clean install
+3. Run the Application
+Using Maven wrapper:
+
+Bash
+**# On Windows**
 mvnw.cmd spring-boot:run
 
-# On Linux/Mac
+**# On Linux/Mac**
 ./mvnw spring-boot:run
-Or run the packaged JAR file:Bashjava -jar target/loanapp-0.0.1-SNAPSHOT.jar
-The application will start on http://localhost:8081👥 Default User RolesRolePermissions & CapabilitiesCUSTOMERCan apply for loans and track their applicationsOFFICERCan verify loan applications and forward them to the managerMANAGERCan approve or reject verified applicationsADMINCan view system statistics and manage users🔌 API EndpointsAuthenticationPOST /api/auth/register — Register a new userPOST /api/auth/login — Login and receive a JWT tokenLoan APIsPOST /api/loans/apply — Apply for a loan (requires authentication)GET /api/loans/my-loans — Get current user's loans (requires authentication)GET /api/loans/user/{userId} — Get loans by user IDOfficer APIsGET /api/officer/pending-loans — Get pending loan applicationsPOST /api/officer/verify/{id} — Verify and forward a loan applicationManager APIsGET /api/manager/pending-approvals — Get verified applications for approvalPOST /api/manager/decision/{id}?status={APPROVE\|REJECT} — Approve or reject a loanAdmin APIsGET /api/admin/stats — Get system statisticsGET /api/admin/users — Get all users🌐 Web PagesRouteDescription/Landing page/loginLogin page/registerRegistration page/dashboardRole-based dashboard redirect/customer/dashboardCustomer dashboard/officer/dashboardOfficer dashboard/manager/dashboardManager dashboard/admin/dashboardAdmin dashboard📁 Project StructurePlaintextloanapp/
+Or run the packaged JAR file:
+
+**Bash**
+java -jar target/loanapp-0.0.1-SNAPSHOT.jar
+The application will start on http://localhost:8081
+
+**👥 Default User Roles**
+Role	Permissions & Capabilities
+CUSTOMER	Can apply for loans and track their applications
+OFFICER	Can verify loan applications and forward them to the manager
+MANAGER	Can approve or reject verified applications
+ADMIN	Can view system statistics and manage users
+**🔌 API Endpoints**
+**Authentication**
+POST /api/auth/register — Register a new user
+
+POST /api/auth/login — Login and receive a JWT token
+
+**Loan APIs**
+POST /api/loans/apply — Apply for a loan (requires authentication)
+
+GET /api/loans/my-loans — Get current user's loans (requires authentication)
+
+GET /api/loans/user/{userId} — Get loans by user ID
+
+**Officer APIs**
+GET /api/officer/pending-loans — Get pending loan applications
+
+POST /api/officer/verify/{id} — Verify and forward a loan application
+
+**Manager APIs**
+GET /api/manager/pending-approvals — Get verified applications for approval
+
+POST /api/manager/decision/{id}?status={APPROVE\|REJECT} — Approve or reject a loan
+
+**Admin APIs**
+GET /api/admin/stats — Get system statistics
+
+GET /api/admin/users — Get all users
+
+🌐** Web Pages**
+**Route	Description**
+/	Landing page
+/login	Login page
+/register	Registration page
+/dashboard	Role-based dashboard redirect
+/customer/dashboard	Customer dashboard
+/officer/dashboard	Officer dashboard
+/manager/dashboard	Manager dashboard
+/admin/dashboard	Admin dashboard
+
+**📁 Project Structure**
+Plaintext
+loanapp/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/bajajFinserv/loanapp/
@@ -33,7 +169,11 @@ The application will start on http://localhost:8081👥 Default User RolesRolePe
 │   └── test/                        # Test cases
 ├── pom.xml                          # Maven configuration
 └── README.md                        # Documentation
-⚙️ ConfigurationApplication Properties (application.properties)Properties# Server Configuration
+
+**⚙️ Configuration**
+Application Properties (application.properties)
+Properties
+# Server Configuration
 server.port=8081
 
 # Database Configuration
@@ -47,14 +187,95 @@ spring.jpa.show-sql=true
 
 # Security Logging
 logging.level.org.springframework.security=TRACE
-Security Configuration (JwtUtils.java)Javaprivate final String jwtSecret = "your-secret-key";
+Security Configuration (JwtUtils.java)
+Java
+private final String jwtSecret = "your-secret-key";
 private final int jwtExpirationMs = 86400000; // 24 hours
-💻 DevelopmentAdding New FeaturesAdd new entity: Create the class in the model/ package.Add repository: Create an interface in the repository/ package.Add service: Create a service class in the service/ package.Add controller: Create a controller in the controller/ package.Add UI: Create a Thymeleaf template in the templates/ directory.TestingRun tests using Maven:Bashmvn test
-🚀 DeploymentBuilding for ProductionBashmvn clean package -DskipTests
-This command creates an executable JAR file in the target/ directory.Running in ProductionBashjava -jar target/loanapp-0.0.1-SNAPSHOT.jar
-Environment VariablesYou can override configuration settings using environment variables:Bashexport SPRING_DATASOURCE_URL=jdbc:mysql://production-db:3306/loanapp_db
+💻 Development
+Adding New Features
+Add new entity: Create the class in the model/ package.
+
+Add repository: Create an interface in the repository/ package.
+
+Add service: Create a service class in the service/ package.
+
+Add controller: Create a controller in the controller/ package.
+
+Add UI: Create a Thymeleaf template in the templates/ directory.
+
+Testing
+Run tests using Maven:
+
+Bash
+mvn test
+**🚀 Deployment**
+**Building for Production**
+Bash**
+**mvn clean package -DskipTests
+This command creates an executable JAR file in the target/ directory.
+
+**Running in Production**
+**Bash**
+java -jar target/loanapp-0.0.1-SNAPSHOT.jar
+Environment Variables
+You can override configuration settings using environment variables:
+
+**Bash**
+export SPRING_DATASOURCE_URL=jdbc:mysql://production-db:3306/loanapp_db
 export SPRING_DATASOURCE_USERNAME=prod_user
 export SPRING_DATASOURCE_PASSWORD=secure_password
 java -jar target/loanapp-0.0.1-SNAPSHOT.jar
-🔧 TroubleshootingDatabase Connection IssuesEnsure your MySQL server is running.Check and verify database credentials in application.properties.Ensure the loanapp_db database has been created.Port Already in UseChange the port inside application.properties:Propertiesserver.port=8082
-JWT Token IssuesVerify the JWT secret key inside JwtUtils.java.Ensure token expiration time is properly configured.Clear browser localStorage if you run into authentication caching loops.🔒 Security ConsiderationsChange the default JWT secret key for production environments.Use strong, complex database passwords.Enable HTTPS in production.Implement rate limiting for public and sensitive API endpoints.Add strict input validation for all user inputs.Consider enabling CSRF protection for state-changing operations.🔮 Future Enhancements[ ] Email notifications for loan status updates[ ] Document upload functionality[ ] Built-in EMI calculator integration[ ] Payment gateway integration[ ] Advanced reporting and analytics[ ] Companion mobile application development[ ] Comprehensive audit logging[ ] Two-factor authentication (2FA)📄 LicenseThis project is intended for educational and demonstration purposes.💡 SupportFor issues, questions, or contributions, please contact the development team.
+🔧 Troubleshooting
+Database Connection Issues
+Ensure your MySQL server is running.
+
+Check and verify database credentials in application.properties.
+
+Ensure the loanapp_db database has been created.
+
+Port Already in Use
+Change the port inside application.properties:
+
+Properties
+server.port=8082
+JWT Token Issues
+Verify the JWT secret key inside JwtUtils.java.
+
+Ensure token expiration time is properly configured.
+
+Clear browser localStorage if you run into authentication caching loops.
+
+🔒 Security Considerations
+Change the default JWT secret key for production environments.
+
+Use strong, complex database passwords.
+
+Enable HTTPS in production.
+
+Implement rate limiting for public and sensitive API endpoints.
+
+Add strict input validation for all user inputs.
+
+Consider enabling CSRF protection for state-changing operations.
+
+**🔮 Future Enhancements**
+[ ] Email notifications for loan status updates
+
+[ ] Document upload functionality
+
+[ ] Built-in EMI calculator integration
+
+[ ] Payment gateway integration
+
+[ ] Advanced reporting and analytics
+
+[ ] Companion mobile application development
+
+[ ] Comprehensive audit logging
+
+
+**📄 License**
+This project is intended for educational and demonstration purposes.
+**
+💡 Support**
+For issues, questions, or contributions, please contact the development team.
