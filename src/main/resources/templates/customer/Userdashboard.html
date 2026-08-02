@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard - LoanApp</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-gray-100 min-h-screen selection:bg-blue-500 selection:text-white">
+
+<!-- Navbar -->
+<nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-lg">
+    <div class="flex items-center gap-3">
+        <a href="/" class="flex items-center gap-3">
+            <div class="h-10 w-10 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-lg">L</div>
+            <span class="text-xl font-bold gradient-text">LoanApp</span>
+        </a>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-full flex items-center justify-center font-bold text-white shadow-lg cursor-pointer hover:scale-105 transition" id="userAvatar" onclick="openProfileModal()">U</div>
+            <div class="hidden sm:flex flex-col text-right">
+                <span id="userNameDisplay" class="text-sm font-semibold text-gray-200 cursor-pointer hover:text-white transition" th:text="${fullName}" onclick="openProfileModal()">User</span>
+                <span id="userEmailDisplay" class="text-xs text-gray-400" th:text="${email}">user@example.com</span>
+            </div>
+        </div>
+        <a href="/2fa/setup" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-gray-300 px-4 py-2 rounded-xl font-semibold transition text-sm">2FA Settings</a>
+        <button onclick="logout()" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-4 py-2 rounded-xl font-semibold transition shadow-lg text-sm">Logout</button>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<div class="container mx-auto p-6 md:p-8 space-y-8">
+
+    <!-- Success Alert -->
+    <div th:if="${param.success}" class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-emerald-400 text-sm">Loan application submitted successfully! Check the status below.</p>
+        </div>
+    </div>
+
+    <!-- Error Alert -->
+    <div th:if="${param.error}" class="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-red-400 text-sm">Failed to submit loan application. Please check your inputs and try again.</p>
+        </div>
+    </div>
+
+    <!-- Profile Success Alert -->
+    <div th:if="${profileSuccess}" class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-emerald-400 text-sm" th:text="${profileSuccess}">Profile updated successfully!</p>
+        </div>
+    </div>
+
+    <!-- Profile Error Alert -->
+    <div th:if="${profileError}" class="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-red-400 text-sm" th:text="${profileError}">Error updating profile!</p>
+        </div>
+    </div>
+
+    <!-- SECTION 1: Active Loan Details Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-5 rounded-2xl shadow-lg hover:border-blue-500/30 transition">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-8 w-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Outstanding Balance</p>
+            </div>
+            <h3 id="activeBalance" class="text-2xl font-bold text-white">₹0</h3>
+        </div>
+        <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-5 rounded-2xl shadow-lg hover:border-emerald-500/30 transition">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-8 w-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Next EMI Amount</p>
+            </div>
+            <h3 id="activeEmi" class="text-2xl font-bold text-emerald-400">₹0</h3>
+        </div>
+        <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-5 rounded-2xl shadow-lg hover:border-amber-500/30 transition">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-8 w-8 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Due Date</p>
+            </div>
+            <h3 id="activeDueDate" class="text-2xl font-bold text-amber-400">-- / -- / ----</h3>
+        </div>
+        <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-5 rounded-2xl shadow-lg hover:border-purple-500/30 transition">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-8 w-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/>
+                    </svg>
+                </div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Loan Account No.</p>
+            </div>
+            <h3 id="activeAccNo" class="text-lg font-bold text-gray-300 font-mono">--</h3>
+        </div>
+        <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-5 rounded-2xl shadow-lg hover:border-cyan-500/30 transition">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-8 w-8 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                </div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Interest Rate</p>
+            </div>
+            <h3 id="activeInterest" class="text-2xl font-bold text-cyan-400">10.5% p.a.</h3>
+        </div>
+    </div>
+
+    <!-- SECTION 2: Repayments & Quick Actions Toolbar -->
+    <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-white">Manage Repayments & Transactions</h2>
+            <p class="text-sm text-gray-400">Quickly clear dues, manage auto-debits, or download statements</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <button onclick="payEmi()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg">Pay EMI Now</button>
+            <button onclick="manageAutoDebit()" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-gray-300 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Auto-Debit (e-NACH)</button>
+            <button onclick="requestForeclosure()" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-gray-300 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Foreclosure Option</button>
+            <button onclick="downloadStatement()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg">Account Statement</button>
+        </div>
+    </div>
+
+    <!-- SECTION 3: Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Left Column: Apply for Loan Form -->
+        <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-6 md:p-8 rounded-2xl shadow-xl lg:col-span-1 h-fit">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-2.5 bg-gradient-to-tr from-blue-600 to-purple-600 text-white rounded-xl shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-white">Apply for Loan</h2>
+                    <p class="text-xs text-gray-400">Quick processing & approvals</p>
+                </div>
+            </div>
+
+            <!-- Form submission target to backend endpoint -->
+            <form id="loanForm" action="/apply-loan" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Loan Amount (₹)</label>
+                    <input type="number" id="loanAmount" name="loanAmount" placeholder="e.g. 500000" required class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Tenure (Months)</label>
+                    <input type="number" id="tenureMonths" name="tenureMonths" placeholder="e.g. 12" required class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Employment Type</label>
+                    <select id="employmentType" name="employmentType" required class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                        <option value="" disabled selected>Select employment type</option>
+                        <option value="SALARIED">Salaried</option>
+                        <option value="SELF_EMPLOYED">Self Employed</option>
+                        <option value="BUSINESS">Business</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Annual Income (₹)</label>
+                    <input type="number" id="annualIncome" name="annualIncome" placeholder="e.g. 900000" required class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Monthly Income (₹)</label>
+                    <input type="number" id="monthlyIncome" name="monthlyIncome" placeholder="e.g. 75000" required class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Existing Expenses (₹)</label>
+                    <input type="number" id="existingExpenses" name="existingExpenses" placeholder="e.g. 20000" required class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                </div>
+                <button type="submit" class="w-full mt-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium py-3 rounded-xl transition duration-200 shadow-xl text-sm">Submit Application</button>
+            </form>
+        </div>
+
+        <!-- Right Column: Track New Applications Status Table -->
+        <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-6 md:p-8 rounded-2xl shadow-xl lg:col-span-2">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Track New Applications</h2>
+                    <p class="text-xs text-gray-400">Real-time status, pending flags & digital agreements</p>
+                </div>
+                <button onclick="fetchLoans()" class="text-xs bg-slate-700 hover:bg-slate-600 text-gray-300 px-3 py-1.5 rounded-lg border border-slate-600 transition">Refresh</button>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-700">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-slate-900/50 border-b border-slate-700 text-xs uppercase tracking-wider text-gray-400">
+                        <th class="p-4 font-semibold">ID</th>
+                        <th class="p-4 font-semibold">Amount / Tenure</th>
+                        <th class="p-4 font-semibold">Status & Actions</th>
+                        <th class="p-4 font-semibold text-right">Agreement</th>
+                    </tr>
+                    </thead>
+                    <tbody id="loanTableBody" class="divide-y divide-slate-700 text-sm">
+                    <!-- Dynamic rows will load here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Profile Management Modal -->
+<div id="profileModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-700 flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold text-white">Profile Settings</h2>
+                <p class="text-sm text-gray-400">Update your personal information</p>
+            </div>
+            <button onclick="closeProfileModal()" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="profileForm" action="/update-profile" method="POST" class="p-6 space-y-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Full Name</label>
+                <input type="text" id="profileFullName" name="fullName" th:value="${fullName}" required class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Email</label>
+                <input type="email" id="profileEmail" name="email" th:value="${email}" readonly class="w-full bg-slate-900/30 border border-slate-700 rounded-xl px-4 py-3 text-sm text-gray-400 cursor-not-allowed">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Phone Number</label>
+                <input type="tel" id="profilePhone" name="phone" placeholder="Enter your phone number" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Address</label>
+                <textarea id="profileAddress" name="address" placeholder="Enter your address" rows="3" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition resize-none"></textarea>
+            </div>
+
+            <div class="border-t border-slate-700 pt-4 mt-4">
+                <h3 class="text-sm font-semibold text-white mb-3">Change Password</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Current Password</label>
+                        <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">New Password</label>
+                        <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm new password" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button type="button" onclick="closeProfileModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-gray-300 px-4 py-3 rounded-xl font-semibold transition">Cancel</button>
+                <button type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-3 rounded-xl font-semibold transition shadow-lg">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const nameElem = document.getElementById('userNameDisplay');
+    const emailElem = document.getElementById('userEmailDisplay');
+    if (nameElem && nameElem.innerText.trim() !== '') {
+        const initial = nameElem.innerText.charAt(0).toUpperCase();
+        document.getElementById('userAvatar').innerText = initial;
+    }
+
+    function openProfileModal() {
+        document.getElementById('profileModal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+        document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    async function fetchLoans() {
+        try {
+            const response = await fetch('/api/loans/my-loans');
+            if (response.ok) {
+                const loans = await response.json();
+                const tbody = document.getElementById('loanTableBody');
+                tbody.innerHTML = '';
+
+                if(!loans || loans.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">No active applications found.</td></tr>`;
+                    return;
+                }
+
+                const activeLoan = loans.find(l => l.status === 'APPROVED') || loans[0];
+                if(activeLoan) {
+                    document.getElementById('activeBalance').innerText = `₹${(activeLoan.loanAmount * 0.85).toLocaleString()}`;
+                    document.getElementById('activeEmi').innerText = `₹${Math.round((activeLoan.loanAmount / activeLoan.tenureMonths) * 1.1).toLocaleString()}`;
+                    document.getElementById('activeDueDate').innerText = '10th Aug 2026';
+                    document.getElementById('activeAccNo').innerText = `BAJAJ-LN-${activeLoan.id + 10420}`;
+                }
+
+                loans.forEach(loan => {
+                    let statusColor = 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+                    if(loan.status === 'APPROVED') statusColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                    if(loan.status === 'REJECTED') statusColor = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+
+                    let actionBtn = `<span class="text-xs text-gray-400">Processing verification</span>`;
+                    if(loan.status === 'APPROVED') {
+                        actionBtn = `<button onclick="viewOfferLetter(${loan.id})" class="text-xs text-blue-400 hover:underline font-medium">View Offer Letter</button>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-700/30 transition">
+                            <td class="p-4 font-medium text-gray-300">#${loan.id}</td>
+                            <td class="p-4">
+                                <div class="font-semibold text-white">₹${loan.loanAmount.toLocaleString()}</div>
+                                <div class="text-xs text-gray-400">${loan.tenureMonths} Months</div>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium border ${statusColor} inline-block mb-1">
+                                    ${loan.status || 'PENDING'}
+                                </span>
+                                <div class="text-xs">${actionBtn}</div>
+                            </td>
+                            <td class="p-4 text-right">
+                                ${loan.status === 'APPROVED' ? `<button onclick="digitalSign(${loan.id})" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">e-Sign Agreement</button>` : `<span class="text-xs text-gray-500">Pending Approval</span>`}
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching loans:', err);
+        }
+    }
+
+    function payEmi() { alert('Redirecting to secure payment gateway for EMI clearance...'); }
+    function manageAutoDebit() { alert('Opening e-NACH auto-debit management portal...'); }
+    function requestForeclosure() { alert('Foreclosure calculator & request ticket initiated.'); }
+    function downloadStatement() { alert('Downloading Account Statement ledger PDF...'); }
+    function viewOfferLetter(id) { alert('Displaying approved loan terms and Sanction letter for Application #' + id); }
+    function digitalSign(id) { alert('Initiating Aadhaar e-Sign process for loan agreement #' + id); }
+
+    function logout() {
+        window.location.href = '/logout';
+    }
+
+    fetchLoans();
+</script>
+</body>
+</html>

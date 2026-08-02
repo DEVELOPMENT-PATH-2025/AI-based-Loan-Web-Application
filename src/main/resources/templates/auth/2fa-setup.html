@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication - LoanApp</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-gray-100 min-h-screen relative overflow-y-auto">
+
+<!-- Background Elements -->
+<div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" style="animation-delay: -3s;"></div>
+</div>
+
+<!-- Navigation -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <a href="/" class="flex items-center gap-3">
+                    <div class="h-10 w-10 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-lg">L</div>
+                    <span class="text-2xl font-bold gradient-text">LoanApp</span>
+                </a>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/customer/dashboard" class="text-gray-300 hover:text-white transition px-4 py-2 font-medium">Dashboard</a>
+                <a href="/logout" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-6 py-2 rounded-xl font-semibold transition shadow-lg">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 2FA Setup Section -->
+<section class="hero-gradient min-h-screen flex items-center pt-20 relative z-10">
+    <div class="container mx-auto px-6">
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 rounded-3xl p-8 shadow-2xl">
+                <!-- Logo and Header -->
+                <div class="text-center mb-8">
+                    <div class="h-16 w-16 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944 11.955 11.955 0 003.382 7.984 11.955 11.955 0 002 12a11.955 11.955 0 001.382 5.016 11.955 11.955 0 008.618 4.016 11.955 11.955 0 008.618-4.016A11.955 11.955 0 0022 12a11.955 11.955 0 00-1.382-5.016z"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl font-bold text-white mb-2">Two-Factor Authentication</h1>
+                    <p class="text-gray-400">Add an extra layer of security to your account</p>
+                </div>
+
+                <!-- Status Alert -->
+                <div id="statusAlert" class="mb-6 hidden">
+                    <div class="flex items-center gap-3">
+                        <svg id="statusIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+                        <p id="statusMessage" class="text-sm"></p>
+                    </div>
+                </div>
+
+                <!-- Current Status -->
+                <div class="mb-8 bg-slate-900/50 border border-slate-700 rounded-xl p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400">Current Status</p>
+                            <p id="currentStatus" class="text-lg font-semibold" th:text="${twoFactorEnabled} ? 'Enabled' : 'Disabled'">Disabled</p>
+                        </div>
+                        <div id="statusBadge" th:class="${twoFactorEnabled} ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20' : 'bg-gray-500/20 text-gray-400 border-gray-500/20'" class="px-4 py-2 rounded-full text-sm font-medium border">
+                            <span th:text="${twoFactorEnabled} ? 'Active' : 'Inactive'">Inactive</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setup Instructions -->
+                <div id="setupSection" th:if="${!twoFactorEnabled}">
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-white mb-3">How to enable 2FA:</h3>
+                        <ol class="space-y-2 text-gray-300 text-sm">
+                            <li class="flex items-start gap-2">
+                                <span class="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">1</span>
+                                <span>Click the "Enable 2FA" button below</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">2</span>
+                                <span>Save your backup codes securely (they won't be shown again)</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">3</span>
+                                <span>Use backup codes if you lose access to your authenticator</span>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <button onclick="enableTwoFactor()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold py-3 rounded-xl transition shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 mb-4">
+                        Enable 2FA
+                    </button>
+                </div>
+
+                <!-- Backup Codes Display -->
+                <div id="backupCodesSection" class="hidden mb-6">
+                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <div>
+                                <p class="text-amber-400 font-semibold text-sm">Important: Save these backup codes</p>
+                                <p class="text-amber-300/80 text-xs mt-1">These codes won't be shown again. Store them securely.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
+                        <p class="text-sm text-gray-400 mb-3">Your backup codes:</p>
+                        <div id="backupCodesList" class="grid grid-cols-2 gap-2 text-sm font-mono text-gray-300"></div>
+                    </div>
+                    
+                    <button onclick="confirmBackupCodes()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition shadow-lg">
+                        I have saved the backup codes
+                    </button>
+                </div>
+
+                <!-- Disable 2FA -->
+                <div id="disableSection" th:if="${twoFactorEnabled}">
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-white mb-3">Disable 2FA:</h3>
+                        <p class="text-gray-300 text-sm mb-4">Disabling 2FA will remove the extra security layer from your account. Your backup codes will be invalidated.</p>
+                    </div>
+
+                    <button onclick="disableTwoFactor()" class="w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold py-3 rounded-xl transition shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5">
+                        Disable 2FA
+                    </button>
+                </div>
+
+                <!-- Back to Dashboard -->
+                <div class="mt-8 text-center">
+                    <a href="/customer/dashboard" class="text-sm text-gray-500 hover:text-gray-400 transition flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    async function enableTwoFactor() {
+        try {
+            const response = await fetch('/2fa/enable', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                showBackupCodes(data.backupCodes);
+                showStatus('success', '2FA enabled successfully! Please save your backup codes.');
+            } else {
+                const error = await response.json();
+                showStatus('error', error.error || 'Failed to enable 2FA');
+            }
+        } catch (err) {
+            showStatus('error', 'Failed to enable 2FA. Please try again.');
+        }
+    }
+
+    async function disableTwoFactor() {
+        if (!confirm('Are you sure you want to disable 2FA? This will reduce your account security.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/2fa/disable', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                showStatus('success', '2FA disabled successfully');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                const error = await response.json();
+                showStatus('error', error.error || 'Failed to disable 2FA');
+            }
+        } catch (err) {
+            showStatus('error', 'Failed to disable 2FA. Please try again.');
+        }
+    }
+
+    function showBackupCodes(codes) {
+        const setupSection = document.getElementById('setupSection');
+        const backupCodesSection = document.getElementById('backupCodesSection');
+        const backupCodesList = document.getElementById('backupCodesList');
+
+        setupSection.classList.add('hidden');
+        backupCodesSection.classList.remove('hidden');
+
+        backupCodesList.innerHTML = codes.map(code => 
+            `<div class="bg-slate-800 px-3 py-2 rounded text-center">${code}</div>`
+        ).join('');
+    }
+
+    function confirmBackupCodes() {
+        showStatus('success', 'Backup codes saved successfully');
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+    }
+
+    function showStatus(type, message) {
+        const alert = document.getElementById('statusAlert');
+        const icon = document.getElementById('statusIcon');
+        const msg = document.getElementById('statusMessage');
+
+        alert.classList.remove('hidden', 'bg-emerald-500/10', 'border-emerald-500/20', 'bg-red-500/10', 'border-red-500/20');
+        icon.classList.remove('text-emerald-400', 'text-red-400');
+        msg.classList.remove('text-emerald-400', 'text-red-400');
+
+        if (type === 'success') {
+            alert.classList.add('bg-emerald-500/10', 'border-emerald-500/20');
+            icon.classList.add('text-emerald-400');
+            msg.classList.add('text-emerald-400');
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+        } else {
+            alert.classList.add('bg-red-500/10', 'border-red-500/20');
+            icon.classList.add('text-red-400');
+            msg.classList.add('text-red-400');
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+        }
+
+        msg.textContent = message;
+
+        setTimeout(() => {
+            alert.classList.add('hidden');
+        }, 5000);
+    }
+</script>
+
+</body>
+</html>

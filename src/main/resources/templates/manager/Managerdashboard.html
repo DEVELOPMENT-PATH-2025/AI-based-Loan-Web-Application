@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Credit Manager Dashboard - LoanApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-gray-100 min-h-screen">
+
+<nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-lg">
+    <div class="flex items-center gap-3">
+        <a href="/" class="flex items-center gap-3">
+            <div class="h-10 w-10 bg-gradient-to-tr from-amber-600 to-orange-600 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-lg">M</div>
+            <span class="text-xl font-bold gradient-text">Credit Manager Portal</span>
+        </a>
+    </div>
+    <button onclick="logout()" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-4 py-2 rounded-xl font-semibold transition shadow-lg text-sm">Logout</button>
+</nav>
+
+<div class="container mx-auto p-6 md:p-8 space-y-8">
+    <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-6 md:p-8 rounded-2xl shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-lg font-bold text-white">Pending Final Approvals</h2>
+                <p class="text-xs text-gray-400">Review real-time officer-verified applications for final sanction</p>
+            </div>
+            <button onclick="fetchManagerQueue()" class="text-xs bg-slate-700 hover:bg-slate-600 text-gray-300 px-3 py-1.5 rounded-lg border border-slate-600 transition">Refresh List</button>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-700">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                <tr class="bg-slate-900/50 border-b border-slate-700 text-xs uppercase tracking-wider text-gray-400">
+                    <th class="p-4 font-semibold">Loan ID</th>
+                    <th class="p-4 font-semibold">Amount</th>
+                    <th class="p-4 font-semibold">Income / Expenses</th>
+                    <th class="p-4 font-semibold">Status</th>
+                    <th class="p-4 font-semibold text-right">Manager Decision</th>
+                </tr>
+                </thead>
+                <tbody id="managerTableBody" class="divide-y divide-slate-700 text-sm">
+                <!-- Real-time rows will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function fetchManagerQueue() {
+        try {
+            const response = await fetch('/api/manager/pending-approvals');
+            if (response.ok) {
+                const loans = await response.json();
+                const tbody = document.getElementById('managerTableBody');
+                tbody.innerHTML = '';
+
+                if (loans.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-500">No applications pending for final approval.</td></tr>`;
+                    return;
+                }
+
+                loans.forEach(loan => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-700/20 transition">
+                            <td class="p-4 font-medium text-gray-300">#LN-${loan.id}</td>
+                            <td class="p-4 font-semibold text-white">₹${loan.loanAmount.toLocaleString()}</td>
+                            <td class="p-4 text-gray-300">₹${loan.monthlyIncome} / ₹${loan.existingExpenses}</td>
+                            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">${loan.status}</span></td>
+                            <td class="p-4 text-right space-x-2">
+                                <button onclick="decideLoan(${loan.id}, 'APPROVE')" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition border border-emerald-500/30">Approve</button>
+                                <button onclick="decideLoan(${loan.id}, 'REJECT')" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition border border-rose-500/30">Reject</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching manager queue:', err);
+        }
+    }
+
+    async function decideLoan(loanId, decision) {
+        try {
+            const response = await fetch(`/api/manager/decision/${loanId}?status=${decision}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                alert(`Loan application successfully marked as ${decision}`);
+                fetchManagerQueue();
+            } else {
+                alert('Failed to update loan status.');
+            }
+        } catch (err) {
+            console.error('Error updating loan decision:', err);
+        }
+    }
+
+    function logout() {
+        window.location.href = '/logout';
+    }
+
+    fetchManagerQueue();
+</script>
+</body>
+</html>
